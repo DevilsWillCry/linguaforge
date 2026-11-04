@@ -106,7 +106,7 @@ useEventListener(window, 'keydown', (event: KeyboardEvent) => {
     <button
       type="button"
       :aria-label="t('capture.quickAddTitle')"
-      v-if="route.name !== 'review'"
+      v-if="route.name !== 'review' && route.name !== 'tutor'"
       class="fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 grid size-14 place-items-center rounded-full bg-accent text-accent-ink shadow-lg md:hidden"
       data-testid="quick-add-fab"
       @click="capture.openQuickAdd()"

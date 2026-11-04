@@ -98,7 +98,6 @@ onBeforeUnmount(() => subscription.unsubscribe())
         <div>
           <h2 class="font-semibold">{{ t(`today.steps.${today.step.id}.title`) }}</h2>
           <p class="text-sm text-muted">{{ t(`today.steps.${today.step.id}.body`) }}</p>
-          <p v-if="today.step.phase" class="mt-1 text-xs text-muted">{{ t('today.comingPhase', { phase: today.step.phase }) }}</p>
         </div>
         <dl v-if="today.step.id === 'wrapup'" class="grid grid-cols-2 gap-6" data-testid="today-wrapup">
           <div>
@@ -113,7 +112,7 @@ onBeforeUnmount(() => subscription.unsubscribe())
         <div class="flex flex-wrap gap-2">
           <RouterLink v-if="today.step.path" :to="today.step.path" class="lf-btn lf-btn-primary min-h-11">{{ t('today.open') }}</RouterLink>
           <button type="button" class="lf-btn min-h-11" @click="today.advance()">
-            {{ today.step.phase ? t('today.skip') : t('today.markDone') }}
+            {{ t('today.markDone') }}
           </button>
         </div>
       </div>

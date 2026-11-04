@@ -148,6 +148,15 @@ describe('diffWords', () => {
     ])
     expect(score).toBe(60)
   })
+  it('shows words as written, ignoring case when comparing', () => {
+    expect(diffWords('I figure it', 'i figured it').words).toEqual([
+      { word: 'I', kind: 'same' },
+      { word: 'figure', kind: 'missing' },
+      { word: 'figured', kind: 'extra' },
+      { word: 'it', kind: 'same' },
+    ])
+  })
+
   it('scores an empty answer as zero', () => {
     expect(diffWords('hello there', '').score).toBe(0)
     expect(diffWords('', '').score).toBe(0)

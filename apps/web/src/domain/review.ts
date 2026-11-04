@@ -81,7 +81,7 @@ export function undoPatch(log: ReviewLog): Partial<Entry> {
 
 const DAY_MS = 86_400_000
 
-function urgency(entry: Entry, now: Date): number {
+export function urgency(entry: Entry, now: Date): number {
   const overdueDays = Math.max(0, (now.getTime() - new Date(entry.srs.due).getTime()) / DAY_MS)
   // Priority leads, and being long overdue can outweigh it.
   return entry.priority * 2 + Math.min(overdueDays, 10)

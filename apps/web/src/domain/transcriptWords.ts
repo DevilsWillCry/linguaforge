@@ -82,8 +82,9 @@ export interface DiffWord {
   kind: DiffKind
 }
 
-/** A word-by-word comparison for dictation, using the longest common subsequence. */
+/** A word-by-word comparison that ignores case, while showing each word as it was written. */
 export function diffWords(expected: string, typed: string): { words: DiffWord[]; score: number } {
+  const [shownA, shownB] = [expected.match(WORD) ?? [], typed.match(WORD) ?? []]
   const [a, b] = [wordsOf(expected), wordsOf(typed)]
   const table = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1).fill(0))
   for (let i = a.length - 1; i >= 0; i -= 1) {
@@ -95,14 +96,14 @@ export function diffWords(expected: string, typed: string): { words: DiffWord[];
   let [i, j] = [0, 0]
   while (i < a.length || j < b.length) {
     if (i < a.length && j < b.length && a[i] === b[j]) {
-      words.push({ word: a[i]!, kind: 'same' })
+      words.push({ word: shownA[i]!, kind: 'same' })
       i += 1
       j += 1
     } else if (j >= b.length || (i < a.length && table[i + 1]![j]! >= table[i]![j + 1]!)) {
-      words.push({ word: a[i]!, kind: 'missing' })
+      words.push({ word: shownA[i]!, kind: 'missing' })
       i += 1
     } else {
-      words.push({ word: b[j]!, kind: 'extra' })
+      words.push({ word: shownB[j]!, kind: 'extra' })
       j += 1
     }
   }

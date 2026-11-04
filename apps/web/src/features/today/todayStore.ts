@@ -7,10 +7,8 @@ import { studySessionRepository } from '@/data/repositories'
 export interface SessionStep {
   id: 'warmup' | 'new' | 'input' | 'output' | 'wrapup'
   minutes: number
-  /** Where the step happens. Steps without one aren't built yet. */
+  /** Where the step happens. The wrap-up happens on the Today page itself. */
   path?: string
-  /** The phase that builds this step. */
-  phase?: number
 }
 
 /** The Standard session of about 45 minutes. Phase 6 adds the other intensities. */
@@ -18,7 +16,7 @@ export const SESSION_STEPS: SessionStep[] = [
   { id: 'warmup', minutes: 10, path: '/review' },
   { id: 'new', minutes: 10, path: '/enrich' },
   { id: 'input', minutes: 10, path: '/video' },
-  { id: 'output', minutes: 10, phase: 5 },
+  { id: 'output', minutes: 10, path: '/tutor' },
   { id: 'wrapup', minutes: 5 },
 ]
 

@@ -115,6 +115,17 @@ Paste a YouTube link, or choose a video or audio file of your own, on the **Vide
 - **Capturing:** click a word or drag over a phrase. It joins the Library with that sentence as a real example and that moment as its source, and saved entries get a **Reproducir el clip original** button. Items already in the Library are underlined, and clicking one shows what you know about it.
 - **Practice:** Completar hides Library items, or else the longest word in the line, and Dictado scores what you type with a word-by-word comparison. The transcript is hidden in both. YouTube may still show its own captions depending on your preferences, so turn them off with CC.
 
+## AI Tutor
+
+The **Tutor** page needs an AI service, chosen in Settings.
+
+- **Conversar:** roleplay in 8 situations, such as a stand-up, a code review or a job interview. The tutor steers the talk so you need up to 5 items from today's queue, without naming them. The situations are fixed on the server.
+- **Corrections:** each line you send gets a word-by-word comparison with a natural version, a reason in Spanish and tone notes. One tap saves the useful phrase to the Library (trigger "Own mistake") and to your mistakes. Useful expressions from the tutor can be saved too (trigger "Conversation").
+- **Tarea diaria:** write or say 60 to 120 words using the same items, and get feedback.
+- **Progress:** items used correctly in either one count as real output, which Natural status needs. Only the items sent with the request can be credited.
+- **Voice:** the microphone uses the browser's speech service, which may send audio to its provider and isn't in every browser. Replies can be read aloud where the browser has an English voice.
+- **Sent to AI:** the situation, the last 40 lines of the conversation, and each item's text and first meaning. Conversations are saved only in this browser.
+
 ## Reading Lab
 
 Open a web page on the **Lectura** page, from its link or from a source in your Library. Sources open in the right place: YouTube links in the Video Lab and other web links here. A source with only a title offers a search, and its link only has to be pasted once.
@@ -155,5 +166,5 @@ The server listens on loopback only. Because a website you visit could still cal
 | 2 | AI Enrichment Queue, confirm editor, feedback on your own examples, your own AI service | Built, not yet run against a real model |
 | 3 | FSRS reviews in 4 modes, status progression, Today page skeleton | Done |
 | 4 | Video Lab: embed, synced transcript, click to capture, A-B loop, cloze, dictation | Done |
-| 5 | AI Tutor (chat and voice), mistake capture, daily output task, Reading Lab | |
+| 5 | AI Tutor (chat and voice), mistake capture, daily output task, Reading Lab | Done |
 | 6 | Dashboard, intensity presets, PWA push, Supabase sync and logins, hosting for other users, polish | |

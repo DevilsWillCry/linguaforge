@@ -224,15 +224,33 @@ export interface VideoSession {
   updatedAt: IsoDate
 }
 
+export interface TutorCorrection {
+  isNatural: boolean
+  natural: string
+  reason: string
+  toneNote: string
+  keyPhrase: string
+}
+
 export interface TutorMessage {
   role: 'user' | 'assistant'
   content: string
   at: IsoDate
+  /** On the learner's lines: how a native speaker would say it. */
+  correction?: TutorCorrection
+  /** On the learner's lines: targets used correctly. */
+  usedTargets?: string[]
+  /** On the tutor's lines: something worth learning from them. */
+  newExpression?: { text: string; meaning: string }
+  /** Already saved to the Library, so it can't be saved twice. */
+  saved?: boolean
 }
 
 export interface TutorConversation {
   id: string
   scenario: string
+  /** Texts of the Library items this conversation practices. */
+  targets?: string[]
   messages: TutorMessage[]
   updatedAt: IsoDate
 }

@@ -1,6 +1,6 @@
 import { mergeEntries, pairKey } from '@/domain/duplicates'
-import { applyReview, undoPatch, type ReviewAnswer } from '@/domain/review'
-import type { CoreField, Deck, Enrichment, Entry, MediaKey, ReviewLog, SavedView, StudySession, Transcript, VideoSession } from '@/domain/types'
+import { applyReview, nextStatus, undoPatch, type ReviewAnswer } from '@/domain/review'
+import type { CoreField, Deck, Enrichment, Entry, MediaKey, Mistake, ReviewLog, SavedView, StudySession, Transcript, TutorConversation, VideoSession } from '@/domain/types'
 import { db, type LinguaForgeDb } from './db'
 
 /**
@@ -35,6 +35,8 @@ export interface EntryRepository {
   /** Saves one answer and its log together. Returns the updated entry, or null if it was deleted. */
   recordReview(entryId: string, answer: ReviewAnswer, now?: Date): Promise<{ entry: Entry; log: ReviewLog } | null>
   undoReview(log: ReviewLog): Promise<Entry | null>
+  /** Records that these were used correctly in the user's own output, which Natural depends on. */
+  markUsedInOutput(ids: string[], now?: Date): Promise<void>
   /** Ids of the entries reviewed since the given moment, each once. */
   reviewedSince(since: Date): Promise<string[]>
   /** Every entry the enrichment queue has to show or process, in all decks. */
@@ -174,6 +176,15 @@ export function createEntryRepository(database: LinguaForgeDb = db): EntryReposi
       })
     },
 
+    async markUsedInOutput(ids, now = new Date()) {
+      if (!ids.length) return
+      await database.entries.where('id').anyOf(ids).modify((entry) => {
+        entry.stats = { ...entry.stats, lastUsedInOutputAt: now.toISOString() }
+        entry.status = nextStatus(entry, true)
+        entry.updatedAt = now.toISOString()
+      })
+    },
+
     async reviewedSince(since) {
       const logs = await database.reviewLogs.where('reviewedAt').aboveOrEqual(since.toISOString()).toArray()
       return [...new Set(logs.map((log) => log.entryId))]
@@ -248,6 +259,29 @@ export function createVideoRepository(database: LinguaForgeDb = db): VideoReposi
   }
 }
 
+export interface TutorRepository {
+  saveConversation(conversation: TutorConversation): Promise<void>
+  recentConversations(limit: number): Promise<TutorConversation[]>
+  removeConversation(id: string): Promise<void>
+  addMistake(mistake: Mistake): Promise<void>
+}
+
+export function createTutorRepository(database: LinguaForgeDb = db): TutorRepository {
+  return {
+    async saveConversation(conversation) {
+      await database.tutorConversations.put(conversation)
+    },
+    recentConversations: (limit) => database.tutorConversations.orderBy('updatedAt').reverse().limit(limit).toArray(),
+    async removeConversation(id) {
+      await database.tutorConversations.delete(id)
+    },
+    async addMistake(mistake) {
+      await database.mistakes.add(mistake)
+    },
+  }
+}
+
+export const tutorRepository = createTutorRepository()
 export const videoRepository = createVideoRepository()
 export const studySessionRepository = createStudySessionRepository()
 export const deckRepository = createDeckRepository()

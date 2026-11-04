@@ -47,7 +47,7 @@ export const router = createRouter({
     { path: '/enrich', name: 'enrich', component: () => import('@/features/enrichment/EnrichmentPage.vue'), meta: { label: 'enrich', wide: true } },
     { path: '/review', name: 'review', component: () => import('@/features/review/ReviewPage.vue'), meta: { label: 'review' } },
     { path: '/video', name: 'video', component: () => import('@/features/video/VideoPage.vue'), meta: { label: 'video', wide: true } },
-    { path: '/tutor', name: 'tutor', component: placeholder, meta: { label: 'tutor', phase: 5 } },
+    { path: '/tutor', name: 'tutor', component: () => import('@/features/tutor/TutorPage.vue'), meta: { label: 'tutor' } },
     { path: '/reading', name: 'reading', component: () => import('@/features/reading/ReadingPage.vue'), meta: { label: 'reading', wide: true } },
     { path: '/stats', name: 'stats', component: placeholder, meta: { label: 'stats', phase: 6 } },
     { path: '/settings', name: 'settings', component: () => import('@/features/settings/SettingsPage.vue'), meta: { label: 'settings' } },

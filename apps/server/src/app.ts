@@ -10,6 +10,7 @@ import { feedbackRequestSchema, reviewSentence } from './ai/feedback.js'
 import { estimateLevel, levelRequestSchema } from './ai/level.js'
 import { listModels } from './ai/models.js'
 import { DEFAULT_ANTHROPIC_MODEL, anthropicProvider, createProvider } from './ai/providers.js'
+import { outputRequestSchema, reviewOutput, runTutorTurn, tutorRequestSchema } from './ai/tutor.js'
 import {
   aiSettingsInputSchema,
   cleanBaseUrl,
@@ -141,6 +142,18 @@ export function createApp(env: NodeJS.ProcessEnv = process.env, options: AppOpti
     const body = levelRequestSchema.safeParse(await readJson(c))
     if (!body.success) return badRequest(c)
     return run(c.get('userId'), (provider) => estimateLevel(provider, body.data.text))
+  })
+
+  guard.post('/tutor', async (c) => {
+    const body = tutorRequestSchema.safeParse(await readJson(c))
+    if (!body.success) return badRequest(c)
+    return run(c.get('userId'), (provider) => runTutorTurn(provider, body.data))
+  })
+
+  guard.post('/output', async (c) => {
+    const body = outputRequestSchema.safeParse(await readJson(c))
+    if (!body.success) return badRequest(c)
+    return run(c.get('userId'), (provider) => reviewOutput(provider, body.data))
   })
 
   guard.get('/settings', async (c) => {

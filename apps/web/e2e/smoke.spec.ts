@@ -15,10 +15,10 @@ test('navigates with the layout for the current screen size', async ({ page, isM
   await expect(nav).toBeVisible()
   await expect(page.getByTestId(isMobile ? 'sidebar' : 'tabbar')).toBeHidden()
 
-  await nav.getByRole('link', { name: 'Tutor' }).click()
-  await expect(page).toHaveURL(/\/tutor$/)
-  await expect(page.getByRole('heading', { level: 1, name: 'Tutor' })).toBeVisible()
-  await expect(page.getByText('Fase 5')).toBeVisible()
+  await nav.getByRole('link', { name: 'Progreso' }).click()
+  await expect(page).toHaveURL(/\/stats$/)
+  await expect(page.getByRole('heading', { level: 1, name: 'Progreso' })).toBeVisible()
+  await expect(page.getByText('Fase 6')).toBeVisible()
 })
 
 test('has no horizontal overflow on any page', async ({ page }) => {
