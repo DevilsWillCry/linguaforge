@@ -4,7 +4,7 @@ export type AnswerResult = 'correct' | 'close' | 'wrong'
 
 const WORD = /[\p{L}\p{N}'’]+/gu
 
-const wordsOf = (text: string) => (text.toLowerCase().replace(/’/g, "'").match(WORD) ?? []) as string[]
+export const wordsOf = (text: string) => (text.toLowerCase().replace(/’/g, "'").match(WORD) ?? []) as string[]
 
 /** Reduces a word to a rough stem, so "figured" and "figures" both match "figure". */
 function stem(word: string): string {
@@ -12,7 +12,7 @@ function stem(word: string): string {
   return base.length >= 3 ? base.replace(/(.)\1$/, '$1').replace(/e$/, '') : word
 }
 
-const sameWord = (a: string, b: string) => a === b || stem(a) === stem(b)
+export const sameWord = (a: string, b: string) => a === b || stem(a) === stem(b)
 
 /** Edits needed to turn one text into the other, to tell a typo from a wrong answer. */
 function editDistance(a: string, b: string): number {

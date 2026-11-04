@@ -104,6 +104,27 @@ Confirmed entries are scheduled with FSRS (`ts-fsrs`) and reviewed on the **Repa
 
 The **Hoy** page has the guided session: start, pause, a timer and a progress rail. Input and Output are placeholders until Phases 4 and 5, and the wrap-up shows counts only until then.
 
+## Video Lab
+
+Paste a YouTube link, or choose a video or audio file of your own, on the **Video** page. YouTube videos play in the official embedded player and are never downloaded. Your own files stay on your computer and have to be chosen again each time.
+
+- **Transcripts:** YouTube's official captions API only serves a video's owner, and the app doesn't scrape, so you supply them: a `.srt` or `.vtt` file, or the text copied from YouTube's "Show transcript" panel. Each one is saved in the browser, so it only loads once.
+- **Your library's videos:** sources from the Source column are listed on the Video page, with a search for each. Paste a link once and it's saved on all its entries, with a shortcut in the table and the editor. The page also shows which videos already have a transcript.
+- **Watching:** the current line follows playback, and clicking a time seeks. Speed goes from 0.5× to 1.5×, and you can loop between A and B or repeat a sentence.
+- **Keys:** Space plays and pauses, `R` repeats, the arrows change sentence, and `A` and `B` set the loop. They don't work while focus is inside the YouTube player, so click outside it first.
+- **Capturing:** click a word or drag over a phrase. It joins the Library with that sentence as a real example and that moment as its source, and saved entries get a **Reproducir el clip original** button. Items already in the Library are underlined, and clicking one shows what you know about it.
+- **Practice:** Completar hides Library items, or else the longest word in the line, and Dictado scores what you type with a word-by-word comparison. The transcript is hidden in both. YouTube may still show its own captions depending on your preferences, so turn them off with CC.
+
+## Reading Lab
+
+Open a web page on the **Lectura** page, from its link or from a source in your Library. Sources open in the right place: YouTube links in the Video Lab and other web links here. A source with only a title offers a search, and its link only has to be pasted once.
+
+- **Capturing** works as in the Video Lab: click a word, drag over a phrase, or type it for keyboard use. It joins the Library with that sentence as a real example and the page as its source.
+- **Nothing is stored:** only the title and link of recent pages are kept. The text is fetched again each time, and pasted text lasts only while you read it.
+- **If a page can't be read,** because of a login or a block, you can open it in another tab and paste the text.
+- **Level:** Estimar el nivel sends the start of the text to AI for a CEFR estimate, only when you press it.
+- **Safety:** the server only fetches public web pages on the normal ports. It checks every address when connecting and after each redirect, and returns plain text only, so nothing from a page runs in the app.
+
 ## Secrets and users
 
 API keys never reach the browser. A key entered in Settings goes to the server, is encrypted with AES-256-GCM and is never returned, apart from its last four characters. A saved key only stays with the service and address it was entered for.
@@ -133,6 +154,6 @@ The server listens on loopback only. Because a website you visit could still cal
 | 1 | Library, Quick Add, lossless CSV/XLSX import and export, editable dropdowns | Done |
 | 2 | AI Enrichment Queue, confirm editor, feedback on your own examples, your own AI service | Built, not yet run against a real model |
 | 3 | FSRS reviews in 4 modes, status progression, Today page skeleton | Done |
-| 4 | Video Lab: embed, synced transcript, click to capture, A-B loop, cloze, dictation | |
+| 4 | Video Lab: embed, synced transcript, click to capture, A-B loop, cloze, dictation | Done |
 | 5 | AI Tutor (chat and voice), mistake capture, daily output task, Reading Lab | |
 | 6 | Dashboard, intensity presets, PWA push, Supabase sync and logins, hosting for other users, polish | |

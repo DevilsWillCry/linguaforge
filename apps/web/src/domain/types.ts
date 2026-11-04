@@ -195,12 +195,32 @@ export interface StudySession {
   minutes: number
 }
 
+/** One line of a transcript, with its times in seconds. */
+export interface Cue {
+  startSec: number
+  endSec: number
+  text: string
+}
+
+/** Identifies what's being watched: `yt:<id>`, or `file:<name>:<size>` for a local file. */
+export type MediaKey = string
+
+/** A transcript the user supplied, kept so it never has to be loaded twice. */
+export interface Transcript {
+  id: MediaKey
+  name: string
+  cues: Cue[]
+  updatedAt: IsoDate
+}
+
 export interface VideoSession {
-  id: string
-  videoId: string
+  id: MediaKey
+  /** The YouTube id. Local files have none and must be chosen again to replay. */
+  videoId?: string
   title?: string
   positionSec: number
   minutesWatched: number
+  wordsCaptured: number
   updatedAt: IsoDate
 }
 

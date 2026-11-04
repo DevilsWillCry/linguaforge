@@ -17,7 +17,7 @@ export interface SessionStep {
 export const SESSION_STEPS: SessionStep[] = [
   { id: 'warmup', minutes: 10, path: '/review' },
   { id: 'new', minutes: 10, path: '/enrich' },
-  { id: 'input', minutes: 10, phase: 4 },
+  { id: 'input', minutes: 10, path: '/video' },
   { id: 'output', minutes: 10, phase: 5 },
   { id: 'wrapup', minutes: 5 },
 ]

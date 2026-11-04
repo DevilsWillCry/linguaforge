@@ -1,6 +1,6 @@
 import { mergeEntries, pairKey } from '@/domain/duplicates'
 import { applyReview, undoPatch, type ReviewAnswer } from '@/domain/review'
-import type { CoreField, Deck, Enrichment, Entry, ReviewLog, SavedView, StudySession } from '@/domain/types'
+import type { CoreField, Deck, Enrichment, Entry, MediaKey, ReviewLog, SavedView, StudySession, Transcript, VideoSession } from '@/domain/types'
 import { db, type LinguaForgeDb } from './db'
 
 /**
@@ -220,6 +220,35 @@ export function createStudySessionRepository(database: LinguaForgeDb = db): Stud
   }
 }
 
+export interface VideoRepository {
+  getTranscript(id: MediaKey): Promise<Transcript | undefined>
+  saveTranscript(transcript: Transcript): Promise<void>
+  removeTranscript(id: MediaKey): Promise<void>
+  transcriptIds(): Promise<MediaKey[]>
+  getSession(id: MediaKey): Promise<VideoSession | undefined>
+  saveSession(session: VideoSession): Promise<void>
+  recentSessions(limit: number): Promise<VideoSession[]>
+}
+
+export function createVideoRepository(database: LinguaForgeDb = db): VideoRepository {
+  return {
+    getTranscript: (id) => database.transcripts.get(id),
+    async saveTranscript(transcript) {
+      await database.transcripts.put(transcript)
+    },
+    async removeTranscript(id) {
+      await database.transcripts.delete(id)
+    },
+    transcriptIds: () => database.transcripts.toCollection().primaryKeys(),
+    getSession: (id) => database.videoSessions.get(id),
+    async saveSession(session) {
+      await database.videoSessions.put(session)
+    },
+    recentSessions: (limit) => database.videoSessions.orderBy('updatedAt').reverse().limit(limit).toArray(),
+  }
+}
+
+export const videoRepository = createVideoRepository()
 export const studySessionRepository = createStudySessionRepository()
 export const deckRepository = createDeckRepository()
 export const entryRepository = createEntryRepository()

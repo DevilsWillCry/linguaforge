@@ -10,6 +10,7 @@ import {
   type ReviewLog,
   type SavedView,
   type StudySession,
+  type Transcript,
   type TutorConversation,
   type VideoSession,
 } from '@/domain/types'
@@ -25,6 +26,7 @@ export class LinguaForgeDb extends Dexie {
   mistakes!: EntityTable<Mistake, 'id'>
   savedViews!: EntityTable<SavedView, 'id'>
   dismissedDuplicates!: EntityTable<{ key: string }, 'key'>
+  transcripts!: EntityTable<Transcript, 'id'>
 
   constructor(name = 'linguaforge') {
     super(name)
@@ -76,6 +78,10 @@ export class LinguaForgeDb extends Dexie {
             entry.normalizedText = normalizeText(entry.text)
           })
       })
+
+    // v4: transcripts the user loaded in the Video Lab. Sessions become keyed by media,
+    // and nothing could be saved in that table before this version.
+    this.version(4).stores({ transcripts: 'id, updatedAt' })
 
     // "populate" fires once, when the database is first created, inside an atomic
     // transaction. Entries the user later deletes therefore never come back.

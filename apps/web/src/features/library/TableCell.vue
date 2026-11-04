@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SourceLink from '@/features/video/SourceLink.vue'
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { cellOf } from '@/domain/rows'
@@ -73,5 +74,7 @@ function onKeydown(event: KeyboardEvent) {
       <span class="sr-only">{{ t('library.editCell', { field: fieldLabel(field), name: entry.text }) }}</span>
       <CellDisplay :entry="entry" :field="field" />
     </button>
+    <!-- Beside the button, not in it, because a link can't sit inside a button. -->
+    <SourceLink v-if="!editing && field.target === 'source'" compact :name="entry.text" :source="entry.source" class="mt-1 ml-2" />
   </div>
 </template>

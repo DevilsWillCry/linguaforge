@@ -7,6 +7,7 @@ import { resolveUserId } from './auth.js'
 import { statusFor, toAiFailure, type AiErrorCode, type AiProvider } from './ai/client.js'
 import { enrichEntries, enrichRequestSchema } from './ai/enrichment.js'
 import { feedbackRequestSchema, reviewSentence } from './ai/feedback.js'
+import { estimateLevel, levelRequestSchema } from './ai/level.js'
 import { listModels } from './ai/models.js'
 import { DEFAULT_ANTHROPIC_MODEL, anthropicProvider, createProvider } from './ai/providers.js'
 import {
@@ -20,6 +21,9 @@ import {
   type SecretBox,
   type StoredAiSettings,
 } from './ai/settings.js'
+
+import { extractArticle, extractRequestSchema } from './reading/extract.js'
+import { PageError, fetchPublicPage, type FetchedPage } from './reading/fetchPage.js'
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
 
@@ -39,6 +43,8 @@ interface AppOptions {
   /** Where each user's AI settings are kept. Tests get a fresh one in memory. */
   store?: AiSettingsStore
   box?: SecretBox
+  /** Replaces web access when reading pages, in tests. */
+  fetchPage?: (url: string) => Promise<FetchedPage>
 }
 
 /**
@@ -80,21 +86,25 @@ export function createApp(env: NodeJS.ProcessEnv = process.env, options: AppOpti
   // which would spend their API credit. Other sites can't pass the Origin check, and
   // requiring JSON forces a CORS preflight, which this server never approves. The Host
   // check stops a site whose domain was pointed at 127.0.0.1 from reading the settings.
-  const guard = new Hono<{ Variables: { userId: string } }>()
-  guard.use('*', async (c, next) => {
-    const host = c.req.header('host')
-    const origin = c.req.header('origin')
-    if (host && !isLocalUrl(`http://${host}`)) return c.json({ error: 'forbidden' }, 403)
-    if (origin && !isLocalUrl(origin)) return c.json({ error: 'forbidden' }, 403)
-    if (c.req.method !== 'GET' && !c.req.header('content-type')?.toLowerCase().startsWith('application/json')) {
-      return c.json({ error: 'bad_request' }, 415)
-    }
-    const userId = resolveUserId(c.req.raw, env)
-    if (!userId) return c.json({ error: 'unauthenticated' }, 401)
-    c.set('userId', userId)
-    return next()
-  })
-  guard.use('*', bodyLimit({ maxSize: 64 * 1024, onError: (c) => c.json({ error: 'bad_request' }, 413) }))
+  const protect = (routes: Hono<{ Variables: { userId: string } }>) => {
+    routes.use('*', async (c, next) => {
+      const host = c.req.header('host')
+      const origin = c.req.header('origin')
+      if (host && !isLocalUrl(`http://${host}`)) return c.json({ error: 'forbidden' }, 403)
+      if (origin && !isLocalUrl(origin)) return c.json({ error: 'forbidden' }, 403)
+      if (c.req.method !== 'GET' && !c.req.header('content-type')?.toLowerCase().startsWith('application/json')) {
+        return c.json({ error: 'bad_request' }, 415)
+      }
+      const userId = resolveUserId(c.req.raw, env)
+      if (!userId) return c.json({ error: 'unauthenticated' }, 401)
+      c.set('userId', userId)
+      return next()
+    })
+    routes.use('*', bodyLimit({ maxSize: 64 * 1024, onError: (c) => c.json({ error: 'bad_request' }, 413) }))
+    return routes
+  }
+  const guard = protect(new Hono<{ Variables: { userId: string } }>())
+  const reading = protect(new Hono<{ Variables: { userId: string } }>())
 
   const fail = (code: AiErrorCode) => Response.json({ error: code }, { status: statusFor(code) })
 
@@ -125,6 +135,12 @@ export function createApp(env: NodeJS.ProcessEnv = process.env, options: AppOpti
     const body = feedbackRequestSchema.safeParse(await readJson(c))
     if (!body.success) return badRequest(c)
     return run(c.get('userId'), (provider) => reviewSentence(provider, body.data))
+  })
+
+  guard.post('/level', async (c) => {
+    const body = levelRequestSchema.safeParse(await readJson(c))
+    if (!body.success) return badRequest(c)
+    return run(c.get('userId'), (provider) => estimateLevel(provider, body.data.text))
   })
 
   guard.get('/settings', async (c) => {
@@ -200,6 +216,21 @@ export function createApp(env: NodeJS.ProcessEnv = process.env, options: AppOpti
     }
   })
 
+  reading.post('/extract', async (c) => {
+    const body = extractRequestSchema.safeParse(await readJson(c))
+    if (!body.success) return badRequest(c, 'invalid_url')
+    try {
+      const page = await (options.fetchPage ?? fetchPublicPage)(body.data.url)
+      const article = extractArticle(page.body, page.url, page.contentType)
+      return article ? c.json(article) : c.json({ error: 'no_content' }, 422)
+    } catch (error) {
+      // The address isn't logged either, because what someone reads is private.
+      const code = error instanceof PageError ? error.code : 'fetch_failed'
+      return c.json({ error: code }, code === 'invalid_url' || code === 'blocked_url' ? 400 : 502)
+    }
+  })
+
   app.route('/api/ai', guard)
+  app.route('/api/reading', reading)
   return app
 }

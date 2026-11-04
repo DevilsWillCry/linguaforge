@@ -8,6 +8,7 @@ import { normalizeText, safeHttpUrl } from '@/domain/text'
 import type { Entry } from '@/domain/types'
 import { appendOwnExample } from '@/domain/enrichment'
 import OwnExampleCoach from '@/features/enrichment/OwnExampleCoach.vue'
+import SourceLink from '@/features/video/SourceLink.vue'
 import AppModal from '@/shared/ui/AppModal.vue'
 import { notify } from '@/shared/ui/useToasts'
 import FieldInput from './FieldInput.vue'
@@ -127,6 +128,7 @@ function remove() {
           </button>
           <p v-else-if="field.type === 'list'" class="mt-1 text-xs text-muted">{{ t('editor.listHint') }}</p>
           <OwnExampleCoach v-if="field.target === 'ownExamples' && entry" :key="entry.id" class="mt-2" :entry="entry" @add="addOwnExample" />
+          <SourceLink v-if="field.target === 'source' && entry" :source="entry.source" class="mt-1" @click="library.editing = null" />
           <a
             v-if="field.target === 'source' && sourceUrl"
             :href="sourceUrl"

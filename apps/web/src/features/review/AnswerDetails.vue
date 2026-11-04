@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { cellOf } from '@/domain/rows'
 import TagBadge from '@/shared/ui/TagBadge.vue'
 import { useFieldLabel } from '@/features/library/useFieldLabel'
+import SourceLink from '@/features/video/SourceLink.vue'
 import { useReviewStore } from './reviewStore'
 
 const { t } = useI18n()
@@ -61,6 +62,7 @@ const otherFields = computed(() => {
       <li v-for="example in review.current.realExamples" :key="example" class="whitespace-pre-line">{{ example }}</li>
     </ul>
     <p v-if="review.current.notes" class="text-muted">{{ review.current.notes }}</p>
+    <SourceLink :source="review.current.source" class="self-start" />
     <dl v-if="otherFields.length" class="flex flex-col gap-2">
       <div v-for="field in otherFields" :key="field.key">
         <dt class="text-xs text-muted">{{ field.label }}</dt>
