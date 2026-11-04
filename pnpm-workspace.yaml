@@ -1,0 +1,6 @@
+packages:
+  - "apps/*"
+
+# esbuild ships its binary as an optional dependency, so its postinstall isn't needed.
+allowBuilds:
+  esbuild: false

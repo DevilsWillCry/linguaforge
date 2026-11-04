@@ -1,0 +1,16 @@
+node_modules/
+dist/
+*.local
+.env
+.env.*
+!.env.example
+coverage/
+test-results/
+playwright-report/
+.DS_Store
+
+# Saved AI settings and the key that encrypts them
+.data/
+
+# Regenerable graphify cache
+graphify-out/cache/

@@ -1,0 +1,199 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+/*
+ * Design tokens. Components use semantic names (bg-surface, text-muted), and only these
+ * variables change between themes, so components don't need dark: variants.
+ */
+@theme inline {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, monospace;
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-row-hover: var(--row-hover);
+
+  --color-status-new: var(--status-new);
+  --color-status-learning: var(--status-learning);
+  --color-status-familiar: var(--status-familiar);
+  --color-status-natural: var(--status-natural);
+
+  --radius-card: 0.875rem;
+}
+
+:root {
+  --canvas: oklch(0.985 0.002 75);
+  --surface: oklch(1 0 0);
+  --raised: oklch(0.955 0.004 75);
+  --line: oklch(0.905 0.005 75);
+  --ink: oklch(0.22 0.008 75);
+  --muted: oklch(0.47 0.01 75);
+  --accent: oklch(0.52 0.15 48);
+  --accent-ink: oklch(0.99 0.005 75);
+  --accent-soft: oklch(0.94 0.035 60);
+  --danger: oklch(0.5 0.18 27);
+
+  --hue-rose: oklch(0.47 0.17 15);
+  --hue-orange: oklch(0.5 0.15 48);
+  --hue-amber: oklch(0.47 0.1 75);
+  --hue-green: oklch(0.45 0.11 150);
+  --hue-teal: oklch(0.45 0.08 190);
+  --hue-sky: oklch(0.46 0.11 240);
+  --hue-indigo: oklch(0.45 0.15 275);
+  --hue-violet: oklch(0.46 0.16 310);
+  --hue-slate: oklch(0.45 0.02 260);
+  --hue-accent: var(--accent);
+
+  --status-new: oklch(0.47 0.01 75);
+  --status-learning: oklch(0.5 0.12 75);
+  --status-familiar: oklch(0.48 0.12 240);
+  --status-natural: oklch(0.47 0.12 155);
+}
+
+.dark {
+  --canvas: oklch(0.165 0.006 75);
+  --surface: oklch(0.205 0.007 75);
+  --raised: oklch(0.255 0.008 75);
+  --line: oklch(0.3 0.008 75);
+  --ink: oklch(0.95 0.005 75);
+  --muted: oklch(0.72 0.01 75);
+  --accent: oklch(0.73 0.15 55);
+  --accent-ink: oklch(0.2 0.03 55);
+  --accent-soft: oklch(0.3 0.05 55);
+  --danger: oklch(0.75 0.15 27);
+
+  --hue-rose: oklch(0.78 0.13 15);
+  --hue-orange: oklch(0.78 0.13 55);
+  --hue-amber: oklch(0.82 0.13 85);
+  --hue-green: oklch(0.8 0.14 150);
+  --hue-teal: oklch(0.8 0.1 190);
+  --hue-sky: oklch(0.78 0.11 240);
+  --hue-indigo: oklch(0.78 0.1 275);
+  --hue-violet: oklch(0.78 0.12 310);
+  --hue-slate: oklch(0.78 0.02 260);
+  --hue-accent: var(--accent);
+
+  --status-new: oklch(0.75 0.01 75);
+  --status-learning: oklch(0.8 0.13 85);
+  --status-familiar: oklch(0.76 0.11 240);
+  --status-natural: oklch(0.78 0.14 155);
+}
+
+:root,
+.dark {
+  /* Opaque, because pinned table cells must hide the columns scrolling underneath them. */
+  --row-hover: color-mix(in oklch, var(--raised) 40%, var(--surface));
+}
+
+html {
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-feature-settings: 'cv11', 'ss03';
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Shared controls. A 2.5rem minimum height keeps them comfortable to tap. */
+@layer components {
+  .lf-btn {
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--line);
+    padding-inline: 0.75rem;
+    font-size: 0.875rem;
+    color: var(--ink);
+    transition: background-color 120ms ease-out;
+  }
+  .lf-btn:hover:not(:disabled) {
+    background: var(--raised);
+  }
+  .lf-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  .lf-btn[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    font-weight: 500;
+  }
+  .lf-btn-primary {
+    border-color: transparent;
+    background: var(--accent);
+    font-weight: 500;
+    color: var(--accent-ink);
+  }
+  .lf-btn-primary:hover:not(:disabled) {
+    background: var(--accent);
+    opacity: 0.9;
+  }
+  .lf-btn-danger {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  /* A pill tinted with its own color. Set --badge-color to one of the --hue-* tokens. */
+  .lf-badge {
+    border-radius: 9999px;
+    padding: 0.125rem 0.5rem;
+    font-weight: 500;
+    color: var(--badge-color, var(--muted));
+    background: color-mix(in oklch, var(--badge-color, var(--muted)) 14%, transparent);
+  }
+  .lf-input {
+    display: block;
+    width: 100%;
+    min-height: 2.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--line);
+    background: var(--canvas);
+    padding: 0.5rem 0.625rem;
+    font-size: 0.875rem;
+    color: var(--ink);
+  }
+  .lf-input::placeholder {
+    color: var(--muted);
+  }
+  .lf-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+}
+
+.page-enter-active {
+  transition: opacity 140ms ease-out, transform 140ms ease-out;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <title>LinguaForge</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23e8843c'/%3E%3Cpath d='M11 8v16h10' fill='none' stroke='%23201208' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <script>
+      // Runs before first paint so light-mode users don't see a dark flash.
+      // Keep the rule in sync with src/app/theme.ts.
+      try {
+        var mode = localStorage.getItem('lf-theme') || 'auto'
+        var isLight =
+          mode === 'light' ||
+          (mode === 'auto' && matchMedia('(prefers-color-scheme: light)').matches)
+        document.documentElement.classList.toggle('dark', !isLight)
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
