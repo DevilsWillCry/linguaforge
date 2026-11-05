@@ -353,7 +353,7 @@ test('the Today session sends Output to the tutor', async ({ page }) => {
   await page.getByRole('button', { name: 'Empezar la sesión' }).click()
   const step = page.getByTestId('today-step')
   for (let i = 0; i < 3; i += 1) await step.getByRole('button', { name: 'Marcar como hecho' }).click()
-  await expect(step).toContainText('Output')
+  await expect(step).toContainText('Hablar y escribir')
   await step.getByRole('link', { name: 'Abrir' }).click()
   await expect(page).toHaveURL(/\/tutor$/)
 })

@@ -1,7 +1,7 @@
 # Graph Report - own-english-app  (2026-11-05)
 
 ## Corpus Check
-- 184 files · ~106,672 words
+- 184 files · ~106,728 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 3 file(s) not represented in the graph (top: .example 1, (none) 1, .css 1)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c6fdd0dc`
+- Built from commit: `1eee5bbd`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -132,8 +132,8 @@
   apps/web/src/features/voice/voiceStore.ts → apps/web/e2e/library.spec.ts
 - `useReminderStore` --indirect_call--> `setTime()`  [INFERRED]
   apps/web/src/features/reminders/reminderStore.ts → apps/web/e2e/video.spec.ts
-- `results` --calls--> `foldText()`  [EXTRACTED]
-  apps/web/src/features/capture/CommandPalette.vue → apps/web/src/domain/text.ts
+- `freshDb()` --calls--> `LinguaForgeDb`  [EXTRACTED]
+  apps/web/src/data/backup.test.ts → apps/web/src/data/db.ts
 
 ## Import Cycles
 - None detected.
@@ -515,15 +515,15 @@ Nodes (4): runAction(), dismissToast(), Toast, toasts
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `vue` connect `vue` to `SettingsPage.vue`, `AppShell.vue`, `ImportDialog.vue`, `DataSettings.vue`, `vue-i18n`, `TodayPage.vue`, `QuickAddDialog.vue`, `dependencies`, `CommandPalette.vue`, `DraftReview.vue`, `TableCell.vue`, `PracticePanel.vue`, `todayStore.ts`, `StatsPage.vue`, `TableView.vue`, `OwnExampleCoach.vue`, `fieldVisuals.ts`, `KanbanView.vue`, `AiSettings.vue`, `EnrichmentPage.vue`, `readingStore.ts`, `LibrarySources.vue`, `Entry`, `voiceStore.ts`, `PlayerFrame.vue`, `video.test.ts`, `libraryStore.ts`, `VideoPage.vue`, `EntryEditor.vue`, `videoStore.ts`, `tutorStore.ts`, `notify`, `ReviewPage.vue`, `ChatPanel.vue`, `TranscriptPanel.vue`, `i18n.ts`, `OutputTask.vue`, `ExportDialog.vue`, `LibraryPage.vue`, `ActivityHeatmap.vue`, `enrichmentStore.ts`, `vue`, `ForecastChart.vue`, `web/package.json`, `DuplicatesDialog.vue`, `TutorPage.vue`, `FieldInput.vue`, `useToasts.ts`?**
-  _High betweenness centrality (0.133) - this node is a cross-community bridge._
+  _High betweenness centrality (0.116) - this node is a cross-community bridge._
 - **Should `reminders.ts` be split into smaller, more focused modules?**
   _Cohesion score 0.0907258064516129 - nodes in this community are weakly interconnected._
-- **Why does `vue-i18n` connect `vue-i18n` to `SettingsPage.vue`, `AppShell.vue`, `ImportDialog.vue`, `DataSettings.vue`, `TodayPage.vue`, `QuickAddDialog.vue`, `dependencies`, `CommandPalette.vue`, `DraftReview.vue`, `TableCell.vue`, `PracticePanel.vue`, `StatsPage.vue`, `TableView.vue`, `OwnExampleCoach.vue`, `fieldVisuals.ts`, `KanbanView.vue`, `AiSettings.vue`, `EnrichmentPage.vue`, `LibrarySources.vue`, `Entry`, `voiceStore.ts`, `PlayerFrame.vue`, `VideoPage.vue`, `EntryEditor.vue`, `videoStore.ts`, `notify`, `ReviewPage.vue`, `ChatPanel.vue`, `TranscriptPanel.vue`, `i18n.ts`, `OutputTask.vue`, `ExportDialog.vue`, `LibraryPage.vue`, `ActivityHeatmap.vue`, `vue`, `vue`, `ForecastChart.vue`, `web/package.json`, `DuplicatesDialog.vue`, `TutorPage.vue`?**
-  _High betweenness centrality (0.067) - this node is a cross-community bridge._
+- **Why does `Entry` connect `Entry` to `rows.ts`, `ImportDialog.vue`, `vue-i18n`, `QuickAddDialog.vue`, `DraftReview.vue`, `TableCell.vue`, `duplicates.test.ts`, `enrichmentQueue.test.ts`, `OwnExampleCoach.vue`, `fieldVisuals.ts`, `spreadsheet.test.ts`, `analytics.ts`, `KanbanView.vue`, `rows.test.ts`, `EnrichmentPage.vue`, `readingStore.ts`, `review.ts`, `domain/types.ts`, `LibrarySources.vue`, `Entry`, `video.test.ts`, `libraryStore.ts`, `domain/tutor.test.ts`, `repositories.ts`, `EntryEditor.vue`, `videoStore.ts`, `tutorStore.ts`, `anki.ts`, `enrichmentStore.ts`, `DuplicatesDialog.vue`?**
+  _High betweenness centrality (0.077) - this node is a cross-community bridge._
 - **Should `devDependencies` be split into smaller, more focused modules?**
   _Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected._
-- **Why does `notify()` connect `notify` to `rows.ts`, `ImportDialog.vue`, `DataSettings.vue`, `QuickAddDialog.vue`, `DraftReview.vue`, `OwnExampleCoach.vue`, `AiSettings.vue`, `readingStore.ts`, `LibrarySources.vue`, `Entry`, `voiceStore.ts`, `libraryStore.ts`, `domain/tutor.test.ts`, `EntryEditor.vue`, `videoStore.ts`, `tutorStore.ts`, `ChatPanel.vue`, `TranscriptPanel.vue`, `OutputTask.vue`, `ExportDialog.vue`, `useVideoStore`, `enrichmentStore.ts`, `vue`, `DuplicatesDialog.vue`, `useToasts.ts`?**
-  _High betweenness centrality (0.059) - this node is a cross-community bridge._
+- **Why does `useReadingStore` connect `readingStore.ts` to `rows.ts`, `notify`, `LibrarySources.vue`, `ai/enrichment.ts`, `enrichmentStore.ts`?**
+  _High betweenness centrality (0.076) - this node is a cross-community bridge._
 - **Should `server/package.json` be split into smaller, more focused modules?**
   _Cohesion score 0.07301587301587302 - nodes in this community are weakly interconnected._
 - **Should `rows.ts` be split into smaller, more focused modules?**
