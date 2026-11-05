@@ -276,6 +276,10 @@ test.describe('voice', () => {
   test('has no voice buttons where the browser has no support', async ({ page }) => {
     await page.addInitScript(() => {
       Object.assign(window, { webkitSpeechRecognition: undefined, SpeechRecognition: undefined })
+      // Firefox on Linux finds the system's espeak voices otherwise.
+      Object.defineProperty(window, 'speechSynthesis', {
+        value: { getVoices: () => [], addEventListener: () => {}, cancel: () => {}, speak: () => {} },
+      })
     })
     await mockTutor(page)
     await startChat(page)

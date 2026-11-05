@@ -34,6 +34,15 @@ async function fakeVoice(page: Page) {
   })
 }
 
+/** Takes away the browser's voices. Firefox on Linux finds the system's espeak voices otherwise. */
+async function noVoice(page: Page) {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, 'speechSynthesis', {
+      value: { getVoices: () => [], addEventListener: () => {}, cancel: () => {}, speak: () => {} },
+    })
+  })
+}
+
 async function patchEntry(page: Page, text: string, change: string) {
   await page.evaluate(
     async ({ text, change }) => {
@@ -259,6 +268,7 @@ test.describe('listening', () => {
   })
 
   test('is skipped, with a note, when the browser has no voice', async ({ page }) => {
+    await noVoice(page)
     await openReview(page)
     await expect(page.getByTestId('no-voice')).toBeVisible()
   })
@@ -266,6 +276,8 @@ test.describe('listening', () => {
 
 test.describe('use it', () => {
   async function toUseIt(page: Page) {
+    // With a voice, a listening card would come first.
+    await noVoice(page)
     await page.goto('/library')
     await page.getByRole('button', { name: 'Tarjetas', exact: true }).click()
     await page.getByTestId('entry').first().waitFor()
