@@ -2,5 +2,10 @@ packages:
   - "apps/*"
 
 # esbuild ships its binary as an optional dependency, so its postinstall isn't needed.
+# The other three come with the voice model's library and only matter when it runs under
+# Node. The app runs it in the browser.
 allowBuilds:
   esbuild: false
+  onnxruntime-node: false
+  protobufjs: false
+  sharp: false

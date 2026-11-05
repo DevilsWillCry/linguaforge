@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { BookmarkPlus, CheckCircle2, Mic, MicOff, Volume2 } from 'lucide-vue-next'
-import { nextTick, onMounted, ref, watch } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { speak } from '@/features/review/speech'
+import { RouterLink } from 'vue-router'
+import { speak, stopSpeaking } from '@/features/voice/speech'
+import { useVoiceStore } from '@/features/voice/voiceStore'
 import TagBadge from '@/shared/ui/TagBadge.vue'
 import { notify } from '@/shared/ui/useToasts'
 import { useTutorStore } from './tutorStore'
@@ -11,6 +13,7 @@ import WordDiff from './WordDiff.vue'
 
 const { t } = useI18n()
 const tutor = useTutorStore()
+const voice = useVoiceStore()
 
 const draft = ref('')
 const list = ref<HTMLElement | null>(null)
@@ -28,6 +31,7 @@ async function toBottom() {
   if (list.value) list.value.scrollTop = list.value.scrollHeight
 }
 onMounted(toBottom)
+onBeforeUnmount(stopSpeaking)
 watch(() => tutor.conversation?.messages.length, toBottom)
 
 async function send() {
@@ -129,6 +133,10 @@ function onKey(event: KeyboardEvent) {
           {{ t('tutor.voiceReplies') }}
         </label>
       </div>
+      <p v-if="voice.preparing" class="text-xs text-muted" role="status" data-testid="voice-preparing">{{ t('settings.voice.preparing') }}</p>
+      <p v-else-if="tutor.canSpeak && !voice.usingNatural" class="text-xs text-muted" data-testid="voice-nudge">
+        <RouterLink class="underline" :to="{ name: 'settings' }">{{ t('tutor.voiceNudge') }}</RouterLink>
+      </p>
       <p class="text-xs text-muted">{{ t('tutor.sendHint') }}</p>
       <p v-if="mic.supported" class="text-xs text-muted">{{ t('tutor.micPrivacy') }}</p>
     </form>

@@ -11,6 +11,8 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  // The voice model's runtime is an ES module, so the worker that loads it has to be one too.
+  worker: { format: 'es' },
   server: {
     port: 5173,
     strictPort: true,

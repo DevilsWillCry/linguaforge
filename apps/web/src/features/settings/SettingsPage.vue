@@ -8,6 +8,7 @@ import { useReviewStore } from '@/features/review/reviewStore'
 import CaptureSettings from './CaptureSettings.vue'
 import DataSettings from './DataSettings.vue'
 import DropdownEditor from './DropdownEditor.vue'
+import VoiceSettings from './VoiceSettings.vue'
 
 const { t } = useI18n()
 const { mode } = useTheme()
@@ -78,6 +79,7 @@ const locales: { value: Locale; label: string }[] = [
       </label>
     </section>
 
+    <VoiceSettings />
     <AiSettings />
     <DropdownEditor />
     <CaptureSettings />

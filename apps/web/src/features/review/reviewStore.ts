@@ -13,8 +13,8 @@ import type { Deck, Entry, ReviewLog, SentenceFeedback } from '@/domain/types'
 import { AiRequestError, requestFeedback } from '@/features/enrichment/enrichmentApi'
 import { useEnrichmentStore } from '@/features/enrichment/enrichmentStore'
 import { useLibraryStore } from '@/features/library/libraryStore'
+import { canSpeakEnglish, speak, stopSpeaking } from '@/features/voice/speech'
 import { notify } from '@/shared/ui/useToasts'
-import { canSpeakEnglish, speak, stopSpeaking } from './speech'
 
 export const DEFAULT_DAILY_REVIEWS = 40
 /** A rough average, only for the estimate shown to the user. */

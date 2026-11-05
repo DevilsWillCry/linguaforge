@@ -7,7 +7,8 @@ import { RouterLink } from 'vue-router'
 import type { ReviewRating } from '@/domain/review'
 import { useEnrichmentStore } from '@/features/enrichment/enrichmentStore'
 import { useLibraryStore } from '@/features/library/libraryStore'
-import { stopSpeaking } from './speech'
+import { useVoiceStore } from '@/features/voice/voiceStore'
+import { stopSpeaking } from '@/features/voice/speech'
 import AnswerDetails from './AnswerDetails.vue'
 import { useReviewStore } from './reviewStore'
 
@@ -19,6 +20,8 @@ const enrichment = useEnrichmentStore()
 const answerInput = ref<HTMLInputElement | HTMLTextAreaElement | null>(null)
 const RATINGS: ReviewRating[] = [1, 2, 3, 4]
 const RATING_KEYS = { 1: 'again', 2: 'hard', 3: 'good', 4: 'easy' } as const
+
+const voice = useVoiceStore()
 
 const isTypingCard = computed(() => review.card?.mode !== 'useIt')
 
@@ -126,6 +129,7 @@ function onAnswerKey(event: KeyboardEvent) {
           <kbd class="text-xs text-muted">Alt R</kbd>
         </button>
         <button type="button" class="lf-btn" @click="review.playSpeech(0.7)">{{ t('review.listenSlow') }}</button>
+        <span v-if="voice.preparing" class="self-center text-sm text-muted" role="status">{{ t('settings.voice.preparing') }}</span>
       </div>
 
       <!-- Use it: the item itself, since the task is to produce a new sentence with it. -->

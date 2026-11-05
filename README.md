@@ -96,7 +96,7 @@ pnpm --filter @linguaforge/server enrich:try "figure out" "Shall"
 
 Confirmed entries are scheduled with FSRS (`ts-fsrs`) and reviewed on the **Repaso** page, for the deck open in the Library. You always try first: nothing about the answer is on the page until you press Comprobar.
 
-- **Modes:** cloze, production, listening and "use it" rotate per card. Other decks use production only. Listening needs an English voice in the browser, and is skipped with a note if there isn't one, which is common on Linux.
+- **Modes:** cloze, production, listening and "use it" rotate per card. Other decks use production only. Listening needs the natural voice or an English voice in the browser, and is skipped with a note if there's neither, which is common on Linux.
 - **Grades:** Again, Hard, Good and Easy, with keys 1-4 and a suggested grade. `U` undoes the last answer.
 - **Daily queue:** due cards, highest priority first, capped by **Tarjetas por día** in Settings and mixed so similar items don't sit together.
 - **Status:** New → Learning on the first correct answer (Hard or better). Familiar needs 7 days of stability and correct answers in 2 modes. Natural needs 30 days and one correct use in your own writing, judged by AI, or by your own grade of Good or better if AI is off. Status never moves backwards on its own, and one you choose by hand stays until you press **Volver al estado automático**.
@@ -123,8 +123,26 @@ The **Tutor** page needs an AI service, chosen in Settings.
 - **Corrections:** each line you send gets a word-by-word comparison with a natural version, a reason in Spanish and tone notes. One tap saves the useful phrase to the Library (trigger "Own mistake") and to your mistakes. Useful expressions from the tutor can be saved too (trigger "Conversation").
 - **Tarea diaria:** write or say 60 to 120 words using the same items, and get feedback.
 - **Progress:** items used correctly in either one count as real output, which Natural status needs. Only the items sent with the request can be credited.
-- **Voice:** the microphone uses the browser's speech service, which may send audio to its provider and isn't in every browser. Replies can be read aloud where the browser has an English voice.
+- **Voice:** the microphone uses the browser's speech service, which may send audio to its provider and isn't in every browser. Replies can be read aloud with the voice chosen in Settings (see [Voice](#voice)).
 - **Sent to AI:** the situation, the last 40 lines of the conversation, and each item's text and first meaning. Conversations are saved only in this browser.
+
+## Voice
+
+Settings → Voice chooses what reads tutor replies and listening reviews.
+
+- **Basic:** the browser's own voice. Nothing to download, but on Linux it's often robotic or missing.
+- **Natural:** [Kokoro](https://github.com/hexgrad/kokoro), which runs entirely in the browser through `kokoro-js`. It's optional and needs no key. The app downloads the model (92 MB) and nine voices from Hugging Face once, keeps them in the browser's cache, and then works without a connection. "Delete the download" removes them.
+- **Privacy:** the text is read on your computer. Only the downloads reach the network, which `e2e/voice-model.spec.ts` checks.
+- **If it fails:** the app says so and uses the basic voice for the rest of the session.
+- **Speed:** on a 12-thread Ryzen in Firefox it takes about 1.8 s to generate each second of speech, so a line can wait up to 8 s (`MAX_HOLD_MS`) in order to play without pauses in the middle. Replaying a recent line is instant. It runs on one CPU thread, because the headers that allow more would put the Video Lab's YouTube player at risk, and they only reached about 1.06 s in Chromium.
+
+The regular tests replace the model's worker with a fake. To test the real model, which downloads it:
+
+```bash
+cd apps/web
+pnpm exec playwright install firefox
+LF_E2E_VOICE=1 LF_E2E_FIREFOX=1 pnpm exec playwright test voice-model --project=firefox
+```
 
 ## Reading Lab
 

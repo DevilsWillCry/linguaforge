@@ -10,7 +10,7 @@ import type { Deck, Entry, TutorConversation, TutorMessage } from '@/domain/type
 import { saveCapture } from '@/features/capture/saveCapture'
 import { AiRequestError, type AiUsage } from '@/features/enrichment/enrichmentApi'
 import { useEnrichmentStore } from '@/features/enrichment/enrichmentStore'
-import { canSpeakEnglish, speak, stopSpeaking } from '@/features/review/speech'
+import { canSpeakEnglish, speak, stopSpeaking } from '@/features/voice/speech'
 import { notify } from '@/shared/ui/useToasts'
 import { requestOutputReview, requestTutorTurn } from './tutorApi'
 import type { OutputReview, ScenarioId } from './types'

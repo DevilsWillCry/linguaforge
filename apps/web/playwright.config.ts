@@ -14,6 +14,9 @@ export default defineConfig({
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
     { name: 'mobile', use: { ...devices['Pixel 7'] } },
+    // Not part of the usual run. For checking something in the browser this project is used in:
+    // pnpm exec playwright test <file> --project=firefox
+    ...(process.env.LF_E2E_FIREFOX ? [{ name: 'firefox', use: { ...devices['Desktop Firefox'] } }] : []),
   ],
   webServer: {
     command: `pnpm exec vite --port ${PORT} --strictPort`,

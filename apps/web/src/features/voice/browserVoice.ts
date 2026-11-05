@@ -12,14 +12,14 @@ async function englishVoices(): Promise<SpeechSynthesisVoice[]> {
 
 let voice: SpeechSynthesisVoice | undefined
 
-/** Some systems, Linux above all, have no voices. Listening reviews are skipped there. */
-export async function canSpeakEnglish(): Promise<boolean> {
+/** Some systems, Linux above all, have no voices. */
+export async function hasBrowserVoice(): Promise<boolean> {
   const voices = await englishVoices()
   voice = voices.find((v) => v.lang === 'en-US') ?? voices[0]
   return Boolean(voice)
 }
 
-export function speak(text: string, rate = 1) {
+export function speakWithBrowser(text: string, rate = 1) {
   if (!voice) return
   speechSynthesis.cancel()
   const utterance = new SpeechSynthesisUtterance(text)
@@ -29,6 +29,6 @@ export function speak(text: string, rate = 1) {
   speechSynthesis.speak(utterance)
 }
 
-export function stopSpeaking() {
+export function stopBrowserVoice() {
   if ('speechSynthesis' in window) speechSynthesis.cancel()
 }
