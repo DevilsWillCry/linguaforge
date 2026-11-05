@@ -4,16 +4,20 @@ import { useI18n } from 'vue-i18n'
 import { locale, type Locale } from '@/app/i18n'
 import { useTheme, type ThemeMode } from '@/app/theme'
 import AiSettings from './AiSettings.vue'
-import { useReviewStore } from '@/features/review/reviewStore'
 import CaptureSettings from './CaptureSettings.vue'
 import DataSettings from './DataSettings.vue'
 import DropdownEditor from './DropdownEditor.vue'
+import { useReviewStore } from '@/features/review/reviewStore'
+import { useTodayStore } from '@/features/today/todayStore'
+import { INTENSITIES, planMinutes } from '@/domain/sessionPlans'
+import ReminderSettings from './ReminderSettings.vue'
 import VoiceSettings from './VoiceSettings.vue'
 
 const { t } = useI18n()
 const { mode } = useTheme()
 const review = useReviewStore()
 const reviewLimit = ref(review.dailyLimit)
+const today = useTodayStore()
 
 const themes: { value: ThemeMode; label: string }[] = [
   { value: 'auto', label: 'settings.themeAuto' },
@@ -65,6 +69,32 @@ const locales: { value: Locale; label: string }[] = [
       </div>
     </section>
 
+    <section class="flex flex-col gap-3 rounded-card border border-line bg-surface p-5" data-testid="plan-settings">
+      <h2 class="font-semibold">{{ t('settings.plan.title') }}</h2>
+      <div role="group" :aria-label="t('today.intensity')" class="flex flex-wrap gap-2">
+        <button
+          v-for="option in INTENSITIES"
+          :key="option"
+          type="button"
+          class="lf-btn"
+          :aria-pressed="today.intensity === option"
+          @click="today.setIntensity(option)"
+        >
+          {{ t(`today.intensities.${option}`) }} · {{ planMinutes(option) }} min
+        </button>
+      </div>
+      <div class="grid max-w-md gap-3 sm:grid-cols-2">
+        <label class="block">
+          <span class="lf-label">{{ t('settings.plan.weeklyMinutes') }}</span>
+          <input v-model.number="today.weeklyTargets.minutes" type="number" min="1" class="lf-input" />
+        </label>
+        <label class="block">
+          <span class="lf-label">{{ t('settings.plan.weeklyItems') }}</span>
+          <input v-model.number="today.weeklyTargets.items" type="number" min="1" class="lf-input" />
+        </label>
+      </div>
+    </section>
+
     <section class="flex flex-col gap-3 rounded-card border border-line bg-surface p-5">
       <h2 class="font-semibold">{{ t('nav.review') }}</h2>
       <label class="block max-w-xs">
@@ -79,6 +109,7 @@ const locales: { value: Locale; label: string }[] = [
       </label>
     </section>
 
+    <ReminderSettings />
     <VoiceSettings />
     <AiSettings />
     <DropdownEditor />

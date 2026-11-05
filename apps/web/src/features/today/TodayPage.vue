@@ -6,7 +6,11 @@ import { RouterLink } from 'vue-router'
 import { deckRepository, entryRepository, type EntryCounts } from '@/data/repositories'
 import type { Deck } from '@/domain/types'
 import { useEnrichmentStore } from '@/features/enrichment/enrichmentStore'
-import { SESSION_STEPS, useTodayStore } from './todayStore'
+import { outputDays, outputStreak, dayKey } from '@/domain/analytics'
+import { INTENSITIES, planMinutes } from '@/domain/sessionPlans'
+import { statsRepository } from '@/data/repositories'
+import { useTodayStore } from './todayStore'
+import WrapUpRecap from './WrapUpRecap.vue'
 
 const { t } = useI18n()
 const enrichment = useEnrichmentStore()
@@ -24,6 +28,8 @@ const stepClass = (index: number) => {
 }
 
 const reviewedToday = ref(0)
+const streak = ref(0)
+const outputToday = ref(false)
 const dueTomorrow = ref(0)
 
 const decks = shallowRef<{ deck: Deck; counts: EntryCounts }[]>([])
@@ -38,6 +44,10 @@ const subscription = liveQuery(async () => {
   const tomorrow = new Date(midnight)
   tomorrow.setDate(tomorrow.getDate() + 2)
   reviewedToday.value = (await entryRepository.reviewedSince(midnight)).length
+  const { logs, conversations, sessions } = await statsRepository.outputFacts()
+  const days = outputDays(logs, conversations, sessions)
+  streak.value = outputStreak(days, new Date())
+  outputToday.value = days.has(dayKey(new Date()))
   const dueCounts = await Promise.all(list.map((deck) => entryRepository.counts(deck.id, tomorrow)))
   dueTomorrow.value = dueCounts.reduce((sum, counts) => sum + counts.due, 0)
   return Promise.all(list.map(async (deck) => ({ deck, counts: await entryRepository.counts(deck.id) })))
@@ -60,6 +70,7 @@ onBeforeUnmount(() => subscription.unsubscribe())
   <section>
     <h1 class="text-2xl font-semibold tracking-tight">{{ t('nav.today') }}</h1>
     <p class="mt-1 text-sm text-muted">{{ t('today.subtitle') }}</p>
+    <p v-if="streak" class="mt-2 text-sm" data-testid="today-streak">{{ t('today.streak', { n: streak }, streak) }}</p>
 
     <p v-if="failed" role="alert" class="mt-6 text-sm">{{ t('errors.load') }}</p>
     <p v-else-if="loading" class="mt-6 text-sm text-muted">{{ t('loading') }}</p>
@@ -81,10 +92,35 @@ onBeforeUnmount(() => subscription.unsubscribe())
         </div>
       </div>
 
-      <ol class="grid gap-3 sm:grid-cols-5" data-testid="today-rail">
+      <div v-if="!today.state.started" role="group" :aria-label="t('today.intensity')" data-testid="today-intensity">
+        <p class="text-sm font-medium">{{ t('today.intensity') }}</p>
+        <div class="mt-2 flex flex-wrap gap-2">
+          <button
+            v-for="option in INTENSITIES"
+            :key="option"
+            type="button"
+            class="lf-btn"
+            :aria-pressed="today.intensity === option"
+            @click="today.setIntensity(option)"
+          >
+            {{ t(`today.intensities.${option}`) }} · {{ planMinutes(option) }} min
+          </button>
+        </div>
+      </div>
+
+      <div
+        v-if="!today.state.started && !outputToday"
+        class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-raised p-3 text-sm"
+        data-testid="today-rescue"
+      >
+        <p>{{ streak ? t('today.rescue.streak', { n: streak }, streak) : t('today.rescue.body') }}</p>
+        <button type="button" class="lf-btn" @click="today.start('rescue')">{{ t('today.rescue.start') }}</button>
+      </div>
+
+      <ol class="grid grid-cols-2 gap-3 sm:grid-cols-[repeat(auto-fit,minmax(6rem,1fr))]" data-testid="today-rail">
         <li
-          v-for="(item, index) in SESSION_STEPS"
-          :key="item.id"
+          v-for="(item, index) in today.steps"
+          :key="index"
           class="border-t-2 pt-2 text-sm"
           :class="[stepClass(index), today.state.started && index <= today.state.stepIndex ? 'border-accent' : 'border-line']"
           :aria-current="today.state.started && index === today.state.stepIndex ? 'step' : undefined"
@@ -109,6 +145,7 @@ onBeforeUnmount(() => subscription.unsubscribe())
             <dt class="text-xs text-muted">{{ t('today.dueTomorrow') }}</dt>
           </div>
         </dl>
+        <WrapUpRecap v-if="today.step.id === 'wrapup'" />
         <div class="flex flex-wrap gap-2">
           <RouterLink v-if="today.step.path" :to="today.step.path" class="lf-btn lf-btn-primary min-h-11">{{ t('today.open') }}</RouterLink>
           <button type="button" class="lf-btn min-h-11" @click="today.advance()">

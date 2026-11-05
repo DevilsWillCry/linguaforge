@@ -194,6 +194,7 @@ test.describe('choosing the voice', () => {
   test('has no accessibility problems, in either state', async ({ page }) => {
     await fakeModel(page)
     await page.goto('/settings')
+    await expect(settings(page)).toBeVisible()
     const check = async () => {
       const { violations } = await new AxeBuilder({ page }).include('[data-testid="voice-settings"]').withTags(['wcag2a', 'wcag2aa']).analyze()
       expect(violations.map((violation) => violation.id)).toEqual([])

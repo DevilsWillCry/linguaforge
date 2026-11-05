@@ -39,7 +39,10 @@
     "tailwindcss": "^4.3.4",
     "typescript": "^6.0.3",
     "vite": "^8.3.5",
+    "vite-plugin-pwa": "2.0.0",
     "vitest": "^5.1.0",
-    "vue-tsc": "^3.3.14"
+    "vue-tsc": "^3.3.14",
+    "workbox-build": "^7.4.1",
+    "workbox-window": "^7.4.1"
   }
 }

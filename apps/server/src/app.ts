@@ -24,6 +24,7 @@ import {
 } from './ai/settings.js'
 
 import { extractArticle, extractRequestSchema } from './reading/extract.js'
+import { progressSchema, reminderInputSchema, unusedReminderService, type ReminderService } from './push/reminders.js'
 import { PageError, fetchPublicPage, type FetchedPage } from './reading/fetchPage.js'
 
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]'])
@@ -46,6 +47,7 @@ interface AppOptions {
   box?: SecretBox
   /** Replaces web access when reading pages, in tests. */
   fetchPage?: (url: string) => Promise<FetchedPage>
+  reminders?: ReminderService
 }
 
 /**
@@ -62,11 +64,14 @@ export function createApp(env: NodeJS.ProcessEnv = process.env, options: AppOpti
   const serverClient =
     options.client ?? (env.ANTHROPIC_API_KEY && !hosted ? new Anthropic({ apiKey: env.ANTHROPIC_API_KEY }) : undefined)
   const serverModel = env.ANTHROPIC_FAST_MODEL || DEFAULT_ANTHROPIC_MODEL
+  const serverTutorModel = env.ANTHROPIC_TUTOR_MODEL || serverModel
 
   /** The user's own AI if they set one up, otherwise the key in .env on a local server. */
-  async function providerFor(userId: string): Promise<AiProvider | null> {
+  async function providerFor(userId: string, purpose: 'fast' | 'tutor' = 'fast'): Promise<AiProvider | null> {
     const saved = await store.get(userId)
-    if (!saved) return serverClient ? anthropicProvider(serverClient, serverModel) : null
+    if (!saved) {
+      return serverClient ? anthropicProvider(serverClient, purpose === 'tutor' ? serverTutorModel : serverModel) : null
+    }
 
     let apiKey: string | undefined
     if (saved.encryptedKey) {
@@ -74,7 +79,8 @@ export function createApp(env: NodeJS.ProcessEnv = process.env, options: AppOpti
       // Happens if the secrets key changed. The user has to enter their key again.
       if (!apiKey) return null
     }
-    return createProvider({ provider: saved.provider, model: saved.model, baseUrl: saved.baseUrl, apiKey }, options.fetch)
+    const model = purpose === 'tutor' && saved.tutorModel ? saved.tutorModel : saved.model
+    return createProvider({ provider: saved.provider, model, baseUrl: saved.baseUrl, apiKey }, options.fetch)
   }
 
   // Reports whether AI is available. Never include a key in a response.
@@ -106,12 +112,14 @@ export function createApp(env: NodeJS.ProcessEnv = process.env, options: AppOpti
   }
   const guard = protect(new Hono<{ Variables: { userId: string } }>())
   const reading = protect(new Hono<{ Variables: { userId: string } }>())
+  const reminders = protect(new Hono<{ Variables: { userId: string } }>())
+  const reminderService = options.reminders ?? unusedReminderService()
 
   const fail = (code: AiErrorCode) => Response.json({ error: code }, { status: statusFor(code) })
 
   /** Logs only the failure code, so learners' sentences never end up in a log. */
-  async function run(userId: string, call: (provider: AiProvider) => Promise<unknown>): Promise<Response> {
-    const provider = await providerFor(userId)
+  async function run(userId: string, call: (provider: AiProvider) => Promise<unknown>, purpose: 'fast' | 'tutor' = 'fast'): Promise<Response> {
+    const provider = await providerFor(userId, purpose)
     if (!provider) return fail('not_configured')
     try {
       return Response.json(await call(provider))
@@ -147,13 +155,13 @@ export function createApp(env: NodeJS.ProcessEnv = process.env, options: AppOpti
   guard.post('/tutor', async (c) => {
     const body = tutorRequestSchema.safeParse(await readJson(c))
     if (!body.success) return badRequest(c)
-    return run(c.get('userId'), (provider) => runTutorTurn(provider, body.data))
+    return run(c.get('userId'), (provider) => runTutorTurn(provider, body.data), 'tutor')
   })
 
   guard.post('/output', async (c) => {
     const body = outputRequestSchema.safeParse(await readJson(c))
     if (!body.success) return badRequest(c)
-    return run(c.get('userId'), (provider) => reviewOutput(provider, body.data))
+    return run(c.get('userId'), (provider) => reviewOutput(provider, body.data), 'tutor')
   })
 
   guard.get('/settings', async (c) => {
@@ -165,7 +173,7 @@ export function createApp(env: NodeJS.ProcessEnv = process.env, options: AppOpti
     const userId = c.get('userId')
     const body = aiSettingsInputSchema.safeParse(await readJson(c))
     if (!body.success) return badRequest(c)
-    const { provider, model, apiKey } = body.data
+    const { provider, model, tutorModel, apiKey } = body.data
 
     let baseUrl: string | undefined
     if (provider === 'custom') {
@@ -183,6 +191,7 @@ export function createApp(env: NodeJS.ProcessEnv = process.env, options: AppOpti
     const settings: StoredAiSettings = {
       provider,
       model,
+      ...(tutorModel ? { tutorModel } : {}),
       ...(baseUrl ? { baseUrl } : {}),
       ...(apiKey
         ? { encryptedKey: box.seal(apiKey, userId), keyHint: keyHintOf(apiKey) }
@@ -243,7 +252,46 @@ export function createApp(env: NodeJS.ProcessEnv = process.env, options: AppOpti
     }
   })
 
+  reminders.get('/', async (c) => {
+    const saved = await reminderService.store.get(c.get('userId'))
+    return c.json({ publicKey: reminderService.publicKey, enabled: Boolean(saved), time: saved?.time ?? null })
+  })
+
+  reminders.put('/', async (c) => {
+    const body = reminderInputSchema.safeParse(await readJson(c))
+    if (!body.success) return badRequest(c)
+    const previous = await reminderService.store.get(c.get('userId'))
+    // Changing the time keeps today's "already sent", so it can't remind twice in one day.
+    await reminderService.store.save(c.get('userId'), {
+      ...body.data,
+      ...(previous?.lastSentDay ? { lastSentDay: previous.lastSentDay } : {}),
+    })
+    return c.json({ enabled: true, time: body.data.time })
+  })
+
+  reminders.delete('/', async (c) => {
+    await reminderService.store.remove(c.get('userId'))
+    return c.json({ enabled: false })
+  })
+
+  /** Today has real output, so there's nothing left to remind about. */
+  reminders.post('/progress', async (c) => {
+    const body = progressSchema.safeParse(await readJson(c))
+    if (!body.success) return badRequest(c)
+    const saved = await reminderService.store.get(c.get('userId'))
+    if (saved) await reminderService.store.save(c.get('userId'), { ...saved, outputDay: body.data.outputDay })
+    return c.json({ ok: true })
+  })
+
+  reminders.post('/test', async (c) => {
+    const saved = await reminderService.store.get(c.get('userId'))
+    if (!saved) return c.json({ error: 'not_enabled' }, 409)
+    const result = await reminderService.deliver(c.get('userId'), saved)
+    return result === 'sent' ? c.json({ ok: true }) : c.json({ error: result }, 502)
+  })
+
   app.route('/api/ai', guard)
+  app.route('/api/reminders', reminders)
   app.route('/api/reading', reading)
   return app
 }

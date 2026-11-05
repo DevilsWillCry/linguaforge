@@ -43,7 +43,7 @@ watch(entry, (current) => {
   notes.value = current.notes ?? ''
   ipa.value = current.ipa ?? ''
   statusAutomatic.value = false
-})
+}, { immediate: true })
 
 const ownField = computed(() => deck.value?.schema.fields.find((f) => f.target === 'ownExamples'))
 

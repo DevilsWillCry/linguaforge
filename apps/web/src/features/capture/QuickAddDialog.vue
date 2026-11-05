@@ -25,7 +25,7 @@ const text = ref('')
 
 watch(quickAddOpen, (isOpen) => {
   if (isOpen) text.value = capture.prefill.text
-})
+}, { immediate: true })
 
 const similar = computed(() => {
   const normalized = normalizeText(text.value)

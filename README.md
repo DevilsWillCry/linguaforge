@@ -144,6 +144,26 @@ pnpm exec playwright install firefox
 LF_E2E_VOICE=1 LF_E2E_FIREFOX=1 pnpm exec playwright test voice-model --project=firefox
 ```
 
+## Progress and plans
+
+- **Progress page:** today's plan, due count with a 14-day forecast, retention, minutes per activity, an activity calendar, words by status, weak spots with a suggested next focus, recent mistakes and the words you've used in your own output. Every chart can also be read as a table.
+- **What the numbers mean:** retention leaves out first-time answers, and "Hard" counts as remembered. A weak spot needs at least 5 answers. Minutes only count guided sessions on the Today page.
+- **Streak:** only days with real output count: a line to the tutor, a "use it" sentence or the writing task.
+- **Intensity:** Light (20 min), Standard (45), Intensive (90) or Immersion (145, in blocks with a break). Choosing one also sets the weekly targets, which can then be edited in Settings. A 5-minute rescue session is offered on days with no output yet.
+
+## Installing and offline use
+
+The app installs as a PWA and every page keeps working offline, including your library and reviews. AI, reading pages from the web and reminders still need a connection. To test it against a real build:
+
+```bash
+cd apps/web
+LF_E2E_PREVIEW=1 pnpm exec playwright test pwa --project=desktop
+```
+
+## Reminders
+
+Settings → Reminders sends a notification at the time you choose, only on days with no output yet, using standard Web Push. Something has to be awake to send it, so **it only arrives while the API server and the browser are running**, until the app is hosted. The message is generic and encrypted, and travels through your browser's push service. The server's push keys and your subscription are in `.data/`.
+
 ## Reading Lab
 
 Open a web page on the **Lectura** page, from its link or from a source in your Library. Sources open in the right place: YouTube links in the Video Lab and other web links here. A source with only a title offers a search, and its link only has to be pasted once.
@@ -185,4 +205,5 @@ The server listens on loopback only. Because a website you visit could still cal
 | 3 | FSRS reviews in 4 modes, status progression, Today page skeleton | Done |
 | 4 | Video Lab: embed, synced transcript, click to capture, A-B loop, cloze, dictation | Done |
 | 5 | AI Tutor (chat and voice), mistake capture, daily output task, Reading Lab | Done |
-| 6 | Dashboard, intensity presets, PWA push, Supabase sync and logins, hosting for other users, polish | |
+| 6 | Dashboard, intensity presets, offline PWA and reminders, accessibility pass | Done |
+| 6 | Supabase sync and logins, hosting for other users | Not started |

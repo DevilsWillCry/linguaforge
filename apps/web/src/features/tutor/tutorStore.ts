@@ -3,7 +3,8 @@ import { nanoid } from 'nanoid'
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue'
 import { i18n } from '@/app/i18n'
-import { deckRepository, entryRepository, tutorRepository } from '@/data/repositories'
+import { deckRepository, entryRepository, studySessionRepository, tutorRepository } from '@/data/repositories'
+import { WRITING_ACTIVITY } from '@/domain/analytics'
 import { normalizeText } from '@/domain/text'
 import { historyPayload, pickTargets, targetPayload, usedTargetsOf } from '@/domain/tutor'
 import type { Deck, Entry, TutorConversation, TutorMessage } from '@/domain/types'
@@ -216,6 +217,10 @@ export const useTutorStore = defineStore('tutor', () => {
       review.value = result
       reviewedText.value = text
       await creditTargets(result.items.filter((item) => item.correct).map((item) => item.text))
+      // Written output counts for the streak, whichever items it used.
+      await studySessionRepository
+        .add({ id: nanoid(), activity: WRITING_ACTIVITY, startedAt: new Date().toISOString(), minutes: 0 })
+        .catch((error) => console.error(error))
     } catch (error) {
       showError(error)
     } finally {

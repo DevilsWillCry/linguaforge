@@ -75,6 +75,7 @@ export interface AiSettingsView {
   source: 'user' | 'server' | 'none'
   provider?: AiProviderId
   model?: string
+  tutorModel?: string
   baseUrl?: string
   hasKey: boolean
   keyHint?: string
@@ -88,7 +89,7 @@ export interface AiModelOption {
 
 export const fetchAiSettings = () => send<AiSettingsView>('GET', '/api/ai/settings')
 
-export const saveAiSettings = (settings: { provider: AiProviderId; model: string; baseUrl?: string; apiKey?: string }) =>
+export const saveAiSettings = (settings: { provider: AiProviderId; model: string; tutorModel?: string; baseUrl?: string; apiKey?: string }) =>
   send<AiSettingsView>('PUT', '/api/ai/settings', settings)
 
 export const resetAiSettings = () => send<AiSettingsView>('DELETE', '/api/ai/settings')

@@ -3,26 +3,13 @@ import { nanoid } from 'nanoid'
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
 import { studySessionRepository } from '@/data/repositories'
-
-export interface SessionStep {
-  id: 'warmup' | 'new' | 'input' | 'output' | 'wrapup'
-  minutes: number
-  /** Where the step happens. The wrap-up happens on the Today page itself. */
-  path?: string
-}
-
-/** The Standard session of about 45 minutes. Phase 6 adds the other intensities. */
-export const SESSION_STEPS: SessionStep[] = [
-  { id: 'warmup', minutes: 10, path: '/review' },
-  { id: 'new', minutes: 10, path: '/enrich' },
-  { id: 'input', minutes: 10, path: '/video' },
-  { id: 'output', minutes: 10, path: '/tutor' },
-  { id: 'wrapup', minutes: 5 },
-]
+import { SESSION_PLANS, DEFAULT_WEEKLY_TARGETS, targetsFor, type Intensity, type SessionPlanId, type WeeklyTargets } from '@/domain/sessionPlans'
 
 interface SessionState {
   day: string
   started: boolean
+  /** Fixed at the start, so changing the intensity doesn't disturb a session under way. */
+  plan: SessionPlanId
   running: boolean
   stepIndex: number
   /** Study seconds for the whole session, and since the current step began. */
@@ -35,9 +22,10 @@ function localDay(now = new Date()): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
-const freshState = (): SessionState => ({
+const freshState = (plan: SessionPlanId = 'standard'): SessionState => ({
   day: localDay(),
   started: false,
+  plan,
   running: false,
   stepIndex: 0,
   seconds: 0,
@@ -46,7 +34,10 @@ const freshState = (): SessionState => ({
 
 /** Kept in a store, not the page, so the timer keeps running while the user reviews. */
 export const useTodayStore = defineStore('today', () => {
-  const state = useLocalStorage<SessionState>('lf-today-session', freshState())
+  const intensity = useLocalStorage<Intensity>('lf-intensity', 'standard')
+  const weeklyTargets = useLocalStorage<WeeklyTargets>('lf-weekly-targets', DEFAULT_WEEKLY_TARGETS)
+  // Merged so a session saved before plans existed keeps working.
+  const state = useLocalStorage<SessionState>('lf-today-session', freshState(), { mergeDefaults: true })
   // Each day starts a new session.
   if (state.value.day !== localDay()) state.value = freshState()
 
@@ -59,7 +50,9 @@ export const useTodayStore = defineStore('today', () => {
   )
   if (state.value.running) startTimer()
 
-  const step = computed(() => SESSION_STEPS[state.value.stepIndex] ?? null)
+  /** The session under way, or else what starting one now would follow. */
+  const steps = computed(() => SESSION_PLANS[state.value.started ? state.value.plan : intensity.value])
+  const step = computed(() => steps.value[state.value.stepIndex] ?? null)
   const finished = computed(() => state.value.started && !step.value)
 
   function setRunning(running: boolean) {
@@ -68,23 +61,24 @@ export const useTodayStore = defineStore('today', () => {
     else stopTimer()
   }
 
-  function start() {
-    state.value = { ...freshState(), started: true, running: true }
+  function start(plan: SessionPlanId = intensity.value) {
+    state.value = { ...freshState(plan), started: true, running: true }
     startTimer()
   }
 
-  /** Records the minutes spent, for the Phase 6 dashboard, and moves to the next step. */
+  /** Records the minutes spent, for the dashboard, and moves to the next step. */
   async function advance() {
     const current = step.value
     if (!current) return
     const minutes = Math.round(state.value.stepSeconds / 60)
-    if (minutes > 0) {
+    // A break isn't study time.
+    if (minutes > 0 && current.id !== 'break') {
       await studySessionRepository
         .add({ id: nanoid(), activity: current.id, startedAt: new Date().toISOString(), minutes })
         .catch((error) => console.error(error))
     }
     const stepIndex = state.value.stepIndex + 1
-    const running = stepIndex < SESSION_STEPS.length && state.value.running
+    const running = stepIndex < steps.value.length && state.value.running
     state.value = { ...state.value, stepIndex, stepSeconds: 0, running }
     if (!running) stopTimer()
   }
@@ -94,5 +88,11 @@ export const useTodayStore = defineStore('today', () => {
     state.value = freshState()
   }
 
-  return { state, step, finished, start, advance, restart, pause: () => setRunning(false), resume: () => setRunning(true) }
+  /** Changing the intensity also moves the weekly targets to match. They can be edited after. */
+  function setIntensity(next: Intensity) {
+    intensity.value = next
+    weeklyTargets.value = targetsFor(next)
+  }
+
+  return { state, intensity, weeklyTargets, setIntensity, steps, step, finished, start, advance, restart, pause: () => setRunning(false), resume: () => setRunning(true) }
 })

@@ -1,20 +1,19 @@
 <script setup lang="ts">
 import { useEventListener } from '@vueuse/core'
 import { Plus } from 'lucide-vue-next'
-import { computed, onMounted } from 'vue'
+import { computed, defineAsyncComponent, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, RouterView, useRoute } from 'vue-router'
 import { BrandIcon, NAV_ITEMS } from '@/app/router'
 import { useCaptureStore } from '@/features/capture/captureStore'
-import CommandPalette from '@/features/capture/CommandPalette.vue'
-import QuickAddDialog from '@/features/capture/QuickAddDialog.vue'
 import { useEnrichmentStore } from '@/features/enrichment/enrichmentStore'
-import EntryEditor from '@/features/library/EntryEditor.vue'
+import { useLibraryStore } from '@/features/library/libraryStore'
 import ToastList from '@/shared/ui/ToastList.vue'
 
 const { t } = useI18n()
 const route = useRoute()
 const capture = useCaptureStore()
+const library = useLibraryStore()
 const enrichment = useEnrichmentStore()
 
 // Runs from any page, because new entries should be drafted without visiting the queue.
@@ -22,6 +21,21 @@ onMounted(() => void enrichment.start())
 
 const mobileTabs = computed(() => NAV_ITEMS.filter((item) => item.mobileTab))
 const settingsItem = computed(() => NAV_ITEMS.find((item) => item.name === 'settings')!)
+
+// These only show when opened, so they load once the page is up rather than delaying it.
+const CommandPalette = defineAsyncComponent(() => import('@/features/capture/CommandPalette.vue'))
+const QuickAddDialog = defineAsyncComponent(() => import('@/features/capture/QuickAddDialog.vue'))
+const EntryEditor = defineAsyncComponent(() => import('@/features/library/EntryEditor.vue'))
+const AFTER_LOAD_MS = 1500
+const pageSettled = ref(false)
+const dialogsWanted = computed(() => pageSettled.value || capture.paletteOpen || capture.quickAddOpen || library.editing !== null)
+onMounted(() => {
+  setTimeout(() => {
+    pageSettled.value = true
+    // Only for code and shortcut hints, which read fine in the system's monospace until then.
+    void import('@fontsource-variable/jetbrains-mono')
+  }, AFTER_LOAD_MS)
+})
 
 const isMac = /mac/i.test(navigator.userAgent)
 
@@ -114,9 +128,11 @@ useEventListener(window, 'keydown', (event: KeyboardEvent) => {
       <Plus :size="24" aria-hidden="true" />
     </button>
 
-    <CommandPalette />
-    <QuickAddDialog />
-    <EntryEditor />
+    <template v-if="dialogsWanted">
+      <CommandPalette />
+      <QuickAddDialog />
+      <EntryEditor />
+    </template>
     <ToastList />
 
     <!-- Mobile tab bar -->

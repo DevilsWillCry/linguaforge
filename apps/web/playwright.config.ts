@@ -19,7 +19,10 @@ export default defineConfig({
     ...(process.env.LF_E2E_FIREFOX ? [{ name: 'firefox', use: { ...devices['Desktop Firefox'] } }] : []),
   ],
   webServer: {
-    command: `pnpm exec vite --port ${PORT} --strictPort`,
+    // The service worker only exists in a real build, so tests of it run against one.
+    command: process.env.LF_E2E_PREVIEW
+      ? `pnpm exec vite build && pnpm exec vite preview --port ${PORT} --strictPort`
+      : `pnpm exec vite --port ${PORT} --strictPort`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: false,
     // Nothing listens on this port, so a test can never reach a real API server and spend

@@ -39,6 +39,7 @@ export interface EntryRepository {
   markUsedInOutput(ids: string[], now?: Date): Promise<void>
   /** Ids of the entries reviewed since the given moment, each once. */
   reviewedSince(since: Date): Promise<string[]>
+  getMany(ids: string[]): Promise<Entry[]>
   /** Every entry the enrichment queue has to show or process, in all decks. */
   listUnconfirmed(): Promise<Entry[]>
   /**
@@ -185,6 +186,10 @@ export function createEntryRepository(database: LinguaForgeDb = db): EntryReposi
       })
     },
 
+    async getMany(ids) {
+      return (await database.entries.bulkGet(ids)).filter((entry) => entry !== undefined)
+    },
+
     async reviewedSince(since) {
       const logs = await database.reviewLogs.where('reviewedAt').aboveOrEqual(since.toISOString()).toArray()
       return [...new Set(logs.map((log) => log.entryId))]
@@ -221,6 +226,44 @@ export function createSavedViewRepository(database: LinguaForgeDb = db): SavedVi
 
 export interface StudySessionRepository {
   add(session: StudySession): Promise<void>
+}
+
+/** Everything the dashboard reads, for the deck with language features. */
+export interface StatsSnapshot {
+  deck: Deck | null
+  entries: Entry[]
+  logs: ReviewLog[]
+  sessions: StudySession[]
+  conversations: TutorConversation[]
+  mistakes: Mistake[]
+}
+
+export function createStatsRepository(database: LinguaForgeDb = db) {
+  return {
+    /** Only what decides whether a day had output. */
+    async outputFacts() {
+      const [logs, conversations, sessions] = await Promise.all([
+        database.reviewLogs.toArray(),
+        database.tutorConversations.toArray(),
+        database.studySessions.toArray(),
+      ])
+      return { logs, conversations, sessions }
+    },
+
+    async snapshot(): Promise<StatsSnapshot> {
+      const decks = await database.decks.toArray()
+      const deck = decks.find((candidate) => candidate.schema.languageFeatures) ?? null
+      const [entries, allLogs, sessions, conversations, mistakes] = await Promise.all([
+        deck ? database.entries.where('deckId').equals(deck.id).toArray() : [],
+        database.reviewLogs.toArray(),
+        database.studySessions.toArray(),
+        database.tutorConversations.toArray(),
+        database.mistakes.toArray(),
+      ])
+      const ids = new Set(entries.map((entry) => entry.id))
+      return { deck, entries, logs: allLogs.filter((log) => ids.has(log.entryId)), sessions, conversations, mistakes }
+    },
+  }
 }
 
 export function createStudySessionRepository(database: LinguaForgeDb = db): StudySessionRepository {
@@ -283,6 +326,7 @@ export function createTutorRepository(database: LinguaForgeDb = db): TutorReposi
 
 export const tutorRepository = createTutorRepository()
 export const videoRepository = createVideoRepository()
+export const statsRepository = createStatsRepository()
 export const studySessionRepository = createStudySessionRepository()
 export const deckRepository = createDeckRepository()
 export const entryRepository = createEntryRepository()

@@ -262,3 +262,40 @@ describe('POST /api/ai/feedback', () => {
     expect(res.status).toBe(400)
   })
 })
+
+describe('choosing a model per task', () => {
+  const FEEDBACK_BODY = {
+    target: { text: 'Borrow', meanings: [], tone: '', context: '' },
+    sentence: 'Can I borrow charger?',
+  }
+  const TUTOR_BODY = { scenario: 'standup', targets: [], history: [] }
+  const REPLY = { reply: 'Hi', correction: null, usedTargets: [], newExpression: null }
+  const FEEDBACK = { verdict: 'natural', usesTarget: true, grammar: '', naturalness: '', toneFit: '', betterVersion: '' }
+
+  it('uses the tutor model for the tutor and the fast one for the rest', async () => {
+    const { client, bodies } = sdkWith((body) =>
+      modelReply(JSON.stringify(body.messages).includes('charger') ? FEEDBACK : REPLY),
+    )
+    const app = createApp({ ...ENV, ANTHROPIC_FAST_MODEL: 'fast', ANTHROPIC_TUTOR_MODEL: 'strong' }, { client })
+    await send(app, post('/api/ai/feedback', FEEDBACK_BODY))
+    await send(app, post('/api/ai/tutor', TUTOR_BODY))
+    expect(bodies.map((body) => body.model)).toEqual(['fast', 'strong'])
+  })
+
+  it('falls back to the fast model when no tutor model is set', async () => {
+    const { client, bodies } = sdkWith(() => modelReply(REPLY))
+    await send(createApp({ ...ENV, ANTHROPIC_FAST_MODEL: 'fast' }, { client }), post('/api/ai/tutor', TUTOR_BODY))
+    expect(bodies[0]!.model).toBe('fast')
+  })
+
+  it('saves the tutor model with the user\'s settings, and an empty one clears it', async () => {
+    const app = createApp({})
+    const save = async (tutorModel?: string) => {
+      const request = post('/api/ai/settings', { provider: 'openrouter', model: 'fast', apiKey: 'sk-or-1234567890', ...(tutorModel === undefined ? {} : { tutorModel }) })
+      const { path, ...init } = request
+      return (await app.request(path, { ...init, method: 'PUT' })).json()
+    }
+    expect((await save('strong')).tutorModel).toBe('strong')
+    expect((await save('')).tutorModel).toBeUndefined()
+  })
+})

@@ -28,3 +28,18 @@ for (const colorScheme of ['dark', 'light'] as const) {
     }
   })
 }
+
+// Every other page, in both themes and at both sizes, as the final check on each release.
+for (const colorScheme of ['dark', 'light'] as const) {
+  test.describe(`All pages in ${colorScheme} theme`, () => {
+    test.use({ colorScheme })
+    for (const path of ['/', '/enrich', '/review', '/video', '/tutor', '/reading', '/stats', '/settings']) {
+      test(`${path} meets WCAG AA`, async ({ page }) => {
+        await page.goto(path)
+        await page.getByRole('heading', { level: 1 }).first().waitFor()
+        await page.waitForLoadState('networkidle')
+        await expectNoViolations(page)
+      })
+    }
+  })
+}

@@ -30,6 +30,7 @@ const unreachable = ref(false)
 
 const provider = ref<AiProviderId>('openrouter')
 const model = ref('')
+const tutorModel = ref('')
 const baseUrl = ref('')
 const apiKey = ref('')
 
@@ -76,6 +77,7 @@ const isSaved = computed(
     (saved.value?.source === 'user' &&
       saved.value.provider === provider.value &&
       saved.value.model === model.value.trim() &&
+      (saved.value.tutorModel ?? '') === tutorModel.value.trim() &&
       !apiKey.value.trim() &&
       (provider.value !== 'custom' || saved.value.baseUrl === baseUrl.value.trim().replace(/\/+$/, ''))),
 )
@@ -107,6 +109,7 @@ function applySaved(view: AiSettingsView) {
   if (view.source !== 'user' || !view.provider) return
   provider.value = view.provider
   model.value = view.model ?? ''
+  tutorModel.value = view.tutorModel ?? ''
   baseUrl.value = view.baseUrl ?? ''
 }
 
@@ -124,6 +127,7 @@ watch(provider, () => {
   testDraft.value = null
   // Each service names its models differently, so the old choice wouldn't carry over.
   model.value = saved.value?.provider === provider.value ? (saved.value.model ?? '') : ''
+  tutorModel.value = saved.value?.provider === provider.value ? (saved.value.tutorModel ?? '') : ''
   void loadModels()
 })
 
@@ -135,6 +139,7 @@ async function save() {
     const view = await saveAiSettings({
       provider: provider.value,
       model: model.value.trim(),
+      ...(tutorModel.value.trim() ? { tutorModel: tutorModel.value.trim() } : {}),
       ...(provider.value === 'custom' ? { baseUrl: baseUrl.value.trim() } : {}),
       ...(apiKey.value.trim() ? { apiKey: apiKey.value.trim() } : {}),
     })
@@ -155,6 +160,7 @@ async function reset() {
     saved.value = await resetAiSettings()
     apiKey.value = ''
     model.value = ''
+    tutorModel.value = ''
     notify(t('settings.ai.resetDone'))
     await enrichment.retry()
   } catch (error) {
@@ -255,6 +261,21 @@ async function test() {
           {{ t('settings.ai.freeOnly') }}
         </label>
       </div>
+
+      <label class="block">
+        <span class="lf-label">{{ t('settings.ai.tutorModel') }}</span>
+        <input
+          v-model="tutorModel"
+          type="text"
+          class="lf-input font-mono"
+          list="lf-ai-models"
+          autocomplete="off"
+          spellcheck="false"
+          data-testid="tutor-model"
+          :placeholder="model"
+        />
+        <span class="mt-1 block text-xs text-muted">{{ t('settings.ai.tutorModelHint') }}</span>
+      </label>
 
       <p v-if="isFreeModel" class="rounded-lg border border-line bg-raised p-3 text-sm" data-testid="free-warning">
         {{ t('settings.ai.freeWarning') }}

@@ -56,7 +56,7 @@ const results = computed(() => {
 
 watch(paletteOpen, (isOpen) => {
   if (isOpen) query.value = ''
-})
+}, { immediate: true })
 
 watch(query, (value) => {
   activeIndex.value = 0

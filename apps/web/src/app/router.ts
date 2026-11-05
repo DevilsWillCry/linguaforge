@@ -37,7 +37,6 @@ export const NAV_ITEMS: NavItem[] = [
 
 export const BrandIcon = GraduationCap
 
-const placeholder = () => import('@/shared/ui/PlaceholderPage.vue')
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -49,7 +48,7 @@ export const router = createRouter({
     { path: '/video', name: 'video', component: () => import('@/features/video/VideoPage.vue'), meta: { label: 'video', wide: true } },
     { path: '/tutor', name: 'tutor', component: () => import('@/features/tutor/TutorPage.vue'), meta: { label: 'tutor' } },
     { path: '/reading', name: 'reading', component: () => import('@/features/reading/ReadingPage.vue'), meta: { label: 'reading', wide: true } },
-    { path: '/stats', name: 'stats', component: placeholder, meta: { label: 'stats', phase: 6 } },
+    { path: '/stats', name: 'stats', component: () => import('@/features/stats/StatsPage.vue'), meta: { label: 'stats', wide: true } },
     { path: '/settings', name: 'settings', component: () => import('@/features/settings/SettingsPage.vue'), meta: { label: 'settings' } },
     { path: '/capture', name: 'capture', component: () => import('@/features/capture/CapturePage.vue'), meta: { label: 'library' } },
     { path: '/:pathMatch(.*)*', redirect: '/' },

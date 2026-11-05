@@ -9,6 +9,8 @@ import type { ProviderId } from './providers.js'
 export interface StoredAiSettings {
   provider: ProviderId
   model: string
+  /** A stronger model for the tutor. Without one, the tutor uses `model`. */
+  tutorModel?: string
   baseUrl?: string
   encryptedKey?: string
   keyHint?: string
@@ -27,6 +29,7 @@ export interface AiSettingsStore {
 export const aiSettingsInputSchema = z.object({
   provider: z.enum(['anthropic', 'openrouter', 'custom']),
   model: z.string().trim().min(1).max(200),
+  tutorModel: z.string().trim().max(200).optional(),
   baseUrl: z.string().trim().max(500).optional(),
   apiKey: z.string().trim().min(1).max(1000).optional(),
 })
@@ -39,6 +42,7 @@ export function publicSettings(settings: StoredAiSettings | null, envKeyInUse: b
     source: 'user',
     provider: settings.provider,
     model: settings.model,
+    tutorModel: settings.tutorModel,
     baseUrl: settings.baseUrl,
     hasKey: Boolean(settings.encryptedKey),
     keyHint: settings.keyHint,
@@ -170,6 +174,6 @@ export async function createLocalSettings(env: NodeJS.ProcessEnv) {
   if (env.AI_SECRETS_KEY) masterKey = Buffer.from(env.AI_SECRETS_KEY, 'base64')
   else if (env.LF_HOSTED) throw new Error('A hosted server needs AI_SECRETS_KEY')
   else masterKey = await localMasterKey(directory)
-  return { store: createFileStore(directory), box: createSecretBox(masterKey) }
+  return { directory, store: createFileStore(directory), box: createSecretBox(masterKey) }
 }
 
